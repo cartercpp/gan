@@ -109,7 +109,6 @@ int main()
     neural_network generatorNN({noiseInputSize, 256, 512, gridRows * gridColumns}, 0.0005),
                    discriminatorNN({gridRows * gridColumns, 512, 256, 1}, 0.0001);
 
-    /*
     generatorNN.load_parameters(
         "/home/cartercpp/Documents/C++/GAN/GeneratorWeights.txt",
         "/home/cartercpp/Documents/C++/GAN/GeneratorBiases.txt"
@@ -119,7 +118,6 @@ int main()
         "/home/cartercpp/Documents/C++/GAN/DiscriminatorWeights.txt",
         "/home/cartercpp/Documents/C++/GAN/DiscriminatorBiases.txt"
     );
-    */
 
     // training thread:
     {
@@ -184,6 +182,22 @@ int main()
                         false
                     );
                     generatorNN.update_weights();
+                }
+
+                // save data:
+                if ((epochs % 100 == 0) && (epochs > 0))
+                {
+                    std::ofstream{"/home/cartercpp/Documents/C++/GAN/GeneratorWeights.txt"}
+                        << std::format("{}", generatorNN.weights());
+
+                    std::ofstream{"/home/cartercpp/Documents/C++/GAN/GeneratorBiases.txt"}
+                        << std::format("{}", generatorNN.biases());
+
+                    std::ofstream{"/home/cartercpp/Documents/C++/GAN/DiscriminatorWeights.txt"}
+                        << std::format("{}", discriminatorNN.weights());
+
+                    std::ofstream{"/home/cartercpp/Documents/C++/GAN/DiscriminatorBiases.txt"}
+                        << std::format("{}", discriminatorNN.biases());
                 }
 
                 ++epochs;
