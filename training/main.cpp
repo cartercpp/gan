@@ -97,6 +97,16 @@ int main()
     neural_network generatorNN({noiseInputSize, 256, 512, gridRows * gridColumns}, 0.001),
                    discriminatorNN({gridRows * gridColumns, 512, 256, 1}, 0.001);
 
+    generatorNN.load_parameters(
+        "/home/cartercpp/Documents/C++/GAN/GeneratorWeights.txt",
+        "/home/cartercpp/Documents/C++/GAN/GeneratorBiases.txt"
+        );
+
+    discriminatorNN.load_parameters(
+        "/home/cartercpp/Documents/C++/GAN/DiscriminatorWeights.txt",
+        "/home/cartercpp/Documents/C++/GAN/DiscriminatorBiases.txt"
+    );
+
     // training thread:
     {
         std::jthread thr{[&](std::stop_token st) {
