@@ -57,6 +57,18 @@ int main()
             const std::size_t row = rows - 1 - static_cast<std::size_t>((y - minY) / (maxY - minY) * (rows - 1)),
                               column = static_cast<std::size_t>((x - minX) / (maxX - minX) * (columns - 1));
 
+            if (row > 0)
+                output[row - 1][column] = 'o';
+
+            if (row + 1 < rows)
+                output[row + 1][column] = 'o';
+
+            if (column > 0)
+                output[row][column - 1] = 'o';
+
+            if (column + 1 < columns)
+                output[row][column + 1] = 'o';
+
             output[row][column] = 'o';
         }
 
@@ -94,9 +106,10 @@ int main()
     std::uniform_int_distribution<std::size_t> rowDist(20, gridRows);
     std::uniform_real_distribution<double> noiseDist(-1, 1);
 
-    neural_network generatorNN({noiseInputSize, 256, 512, gridRows * gridColumns}, 0.001),
-                   discriminatorNN({gridRows * gridColumns, 512, 256, 1}, 0.001);
+    neural_network generatorNN({noiseInputSize, 256, 512, gridRows * gridColumns}, 0.0005),
+                   discriminatorNN({gridRows * gridColumns, 512, 256, 1}, 0.0001);
 
+    /*
     generatorNN.load_parameters(
         "/home/cartercpp/Documents/C++/GAN/GeneratorWeights.txt",
         "/home/cartercpp/Documents/C++/GAN/GeneratorBiases.txt"
@@ -106,6 +119,7 @@ int main()
         "/home/cartercpp/Documents/C++/GAN/DiscriminatorWeights.txt",
         "/home/cartercpp/Documents/C++/GAN/DiscriminatorBiases.txt"
     );
+    */
 
     // training thread:
     {
@@ -115,9 +129,8 @@ int main()
             while (!st.stop_requested())
             {
                 // sample real data:
-                const std::size_t heartRows = rowDist(rd);
-                const std::size_t heartColumns
-                    = static_cast<std::size_t>(heartRows * static_cast<double>(gridColumns) / gridRows);
+                constexpr std::size_t heartRows = gridRows, // could be random, but keeping static for now
+                                      heartColumns = gridColumns;
 
                 const math_vector<double> realHeart{heartToVector(generateHeart(heartRows, heartColumns))};
 
@@ -134,11 +147,13 @@ int main()
 
                 discriminatorNN.backward(
                     realHeartPrediction,
-                    realHeartPrediction.back() - math_vector<double>{1}
+                    realHeartPrediction.back() - math_vector<double>{0.9},
+                    true
                 );
                 discriminatorNN.backward(
                     fakeHeartPrediction,
-                    fakeHeartPrediction.back() - math_vector<double>{0}
+                    fakeHeartPrediction.back() - math_vector<double>{0.0},
+                    true
                 );
                 discriminatorNN.update_weights();
 
@@ -156,13 +171,15 @@ int main()
                 const auto newFakeHeartPrediction = discriminatorNN.forward(newFakeHeart);
                 const auto discriminatorGradients = discriminatorNN.backward(
                     newFakeHeartPrediction,
-                    newFakeHeartPrediction.back() - math_vector<double>{1}
+                    newFakeHeartPrediction.back() - math_vector<double>{1.0},
+                    true
                 );
                 discriminatorNN.zero_deltas();
 
                 generatorNN.backward(
                     newFakeHeartGeneration,
-                    discriminatorGradients
+                    discriminatorGradients,
+                    false
                 );
                 generatorNN.update_weights();
 
