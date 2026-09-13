@@ -159,7 +159,7 @@ int main()
                             epochs, realHeartPrediction.back()[0], fakeHeartPrediction.back()[0]);
 
                 // generate new fake data:
-                for (int iter = 0; iter < 10; ++iter)
+                for (int iter = 0; iter < 7; ++iter)
                 {
                     math_vector<double> newNoise(noiseInputSize, 0);
                     for (std::size_t i = 0; i < noiseInputSize; ++i)
